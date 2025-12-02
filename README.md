@@ -400,6 +400,32 @@ kube-system   nodelocaldns-zvt9f                         1/1     Running   0    
 2. Альтернативный вариант:  
    а. Используйте любой другой код, главное, чтобы был самостоятельно создан Dockerfile.
 
+Создаю репозиторий для тестового приложения https://github.com/GlubuchikAr/diplom-application
+Создаю dockerfile
+```
+FROM nginx:1.29.0
+RUN rm -rf /usr/share/nginx/html/*
+COPY html/ /usr/share/nginx/html/
+EXPOSE 80
+```
+Создаю вебсайт для демонстрации через nginx
+https://github.com/GlubuchikAr/diplom-application/blob/main/html/index.html
+
+Авторизуюсь на hub.docker.com
+```
+docker login
+```
+
+Создаю образ из dockerfile
+```
+docker build . -t aglubuchik/diplom-application:0.1
+```
+
+Загружаю на docker hud
+```
+docker push aglubuchik/diplom-application:0.1
+```
+Ссылка на реестр Docker Hub: https://hub.docker.com/repository/docker/aglubuchik/diplom-application/general
 Ожидаемый результат:
 
 1. Git репозиторий с тестовым приложением и Dockerfile.
