@@ -38,7 +38,7 @@
 
 1. Создайте сервисный аккаунт, который будет в дальнейшем использоваться Terraform для работы с инфраструктурой с необходимыми и достаточными правами. Не стоит использовать права суперпользователя
 
-#### Выполнено в [01/main.tf](01/main.tf)
+#### Выполнено в [01-terraform/main.tf](01-terraform/main.tf)
 ```
 # Создание сервисного аккаунта для Terraform
 resource "yandex_iam_service_account" "service" {
@@ -65,7 +65,7 @@ resource "yandex_iam_service_account_static_access_key" "service-keys" {
    а. Рекомендуемый вариант: S3 bucket в созданном ЯО аккаунте(создание бакета через TF)
    б. Альтернативный вариант:  [Terraform Cloud](https://app.terraform.io/)
 
-#### Выполнено в [01/main.tf](01/main.tf)
+#### Выполнено в [01-terraform/main.tf](01-terraform/main.tf)
 ```
 # Создание бакета с использованием ключа
 resource "yandex_storage_bucket" "tf-bucket" {
@@ -81,19 +81,19 @@ resource "yandex_storage_bucket" "tf-bucket" {
   force_destroy = true
 
 provisioner "local-exec" {
-  command = "echo 'access_key = \"${yandex_iam_service_account_static_access_key.service-keys.access_key}\"' > ../02/backend.conf"
+  command = "echo 'access_key = \"${yandex_iam_service_account_static_access_key.service-keys.access_key}\"' > ../02-kubernetes/terraform/backend.conf"
 }
 
 provisioner "local-exec" {
-  command = "echo 'secret_key = \"${yandex_iam_service_account_static_access_key.service-keys.secret_key}\"' >> ../02/backend.conf"
+  command = "echo 'secret_key = \"${yandex_iam_service_account_static_access_key.service-keys.secret_key}\"' >> ../02-kubernetes/terraform/backend.conf"
 }
 }
 ```
-access_key и secret_key будут записаны в /02/backend.conf, после чего будут использоваться для подключентия к backend
+access_key и secret_key будут записаны в /02-kubernetes/terraform/backend.conf, после чего будут использоваться для подключентия к backend
 
 3. Создайте конфигурацию Terrafrom, используя созданный бакет ранее как бекенд для хранения стейт файла. Конфигурации Terraform для создания сервисного аккаунта и бакета и основной инфраструктуры следует сохранить в разных папках.
 
-#### Выполнено в [02/providers.tf](02/providers.tf)
+#### Выполнено в [02-kubernetes/terraform/providers.tf](02-kubernetes/terraform/providers.tf)
 ```
 terraform {
   backend "s3" {
@@ -123,7 +123,7 @@ terraform {
 terraform init -backend-config=backend.conf
 ```
 4. Создайте VPC с подсетями в разных зонах доступности.
-#### Выполнено в [02/main.tf](02/main.tf)
+#### Выполнено в [02-kubernetes/terraform/main.tf](02-kubernetes/terraform/terraform/main.tf)
 ```
 # Создание сети
 resource "yandex_vpc_network" "develop" {
@@ -148,7 +148,7 @@ resource "yandex_vpc_subnet" "subnet2" {
 
 5. Убедитесь, что теперь вы можете выполнить команды `terraform destroy` и `terraform apply` без дополнительных ручных действий.
 ```
-glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud-main/02$ terraform apply
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud-main/02-kubernetes$ terraform apply
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -217,7 +217,7 @@ Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
 ![](img/d-1.png)
 
 ```
-glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud-main/02$ terraform destroy
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud-main/02-kubernetes$ terraform destroy
 yandex_vpc_network.develop: Refreshing state... [id=enpq28e14fcadlojgav0]
 yandex_vpc_subnet.subnet2: Refreshing state... [id=e2lq5qhokj1kr03dsie3]
 yandex_vpc_subnet.subnet1: Refreshing state... [id=e9bsqj557554m1l9vcrf]
@@ -292,8 +292,6 @@ yandex_vpc_network.develop: Destruction complete after 1s
 Destroy complete! Resources: 3 destroyed.
 ```
 
-6. В случае использования [Terraform Cloud](https://app.terraform.io/) в качестве [backend](https://developer.hashicorp.com/terraform/language/backend) убедитесь, что применение изменений успешно проходит, используя web-интерфейс Terraform cloud.
-
 Ожидаемые результаты:
 
 1. Terraform сконфигурирован и создание инфраструктуры посредством Terraform возможно без дополнительных ручных действий, стейт основной конфигурации сохраняется в бакете или Terraform Cloud
@@ -310,10 +308,79 @@ Destroy complete! Resources: 3 destroyed.
    а. При помощи Terraform подготовить как минимум 3 виртуальных машины Compute Cloud для создания Kubernetes-кластера. Тип виртуальной машины следует выбрать самостоятельно с учётом требовании к производительности и стоимости. Если в дальнейшем поймете, что необходимо сменить тип инстанса, используйте Terraform для внесения изменений.  
    б. Подготовить [ansible](https://www.ansible.com/) конфигурации, можно воспользоваться, например [Kubespray](https://kubernetes.io/docs/setup/production-environment/tools/kubespray/)  
    в. Задеплоить Kubernetes на подготовленные ранее инстансы, в случае нехватки каких-либо ресурсов вы всегда можете создать их при помощи Terraform.
-2. Альтернативный вариант: воспользуйтесь сервисом [Yandex Managed Service for Kubernetes](https://cloud.yandex.ru/services/managed-kubernetes)  
-  а. С помощью terraform resource для [kubernetes](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/kubernetes_cluster) создать **региональный** мастер kubernetes с размещением нод в разных 3 подсетях      
-  б. С помощью terraform resource для [kubernetes node group](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/kubernetes_node_group)
-  
+
+Скачиваю kubespray
+```
+git clone https://github.com/kubernetes-sigs/kubespray.git
+```
+Устанавливаю зависимости
+```
+pip3 install -r requirements.txt
+```
+Копирую пример
+```
+cp -rfp inventory/sample inventory/mycluster
+```
+В ./02-kubernetes/kubespray/inventory/sample/group_vars/k8s_cluster/k8s-cluster.yml прописываю, для формирования файла конфигурации Kubernetes
+```
+kubeconfig_localhost: true
+```
+Добавляю в (02-kubernetes/terraform/terraform/main.tf)[02-kubernetes/terraform/terraform/main.tf]
+```
+# Запуск kubespray для настройки K8S кластера
+resource "null_resource" "run_kubespray" {
+  depends_on = [
+    local_file.ansible_inventory
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      cd ${path.module}/../kubespray && \
+      ansible-playbook -i inventory/mycluster/hosts.yaml \
+        -u ubuntu \
+        --become --become-user=root \
+        cluster.yml \
+        --flush-cache
+    EOT
+  }
+}
+```
+Экспортируем конфиг и проверяем
+```
+(kubespray) glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/02-kubernetes/terraform$ export KUBECONFIG=~/обучение/Netology/devops-diplom-yandexcloud/02-kubernetes/kubespray/inventory/mycluster/artifacts/admin.conf
+
+(kubespray) glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/02-kubernetes/terraform$ kubectl cluster-info
+Kubernetes control plane is running at https://158.160.100.14:6443
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+(kubespray) glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/02-kubernetes/terraform$ kubectl get nodes
+NAME       STATUS   ROLES           AGE   VERSION
+master-1   Ready    control-plane   23m   v1.34.2
+worker-1   Ready    <none>          22m   v1.34.2
+worker-2   Ready    <none>          22m   v1.34.2
+
+(kubespray) glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/02-kubernetes/terraform$ kubectl get pods --all-namespaces
+NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE
+kube-system   calico-kube-controllers-568b875685-8hqjf   1/1     Running   0          22m
+kube-system   calico-node-qz8s9                          1/1     Running   0          23m
+kube-system   calico-node-vfsfc                          1/1     Running   0          23m
+kube-system   calico-node-zvfvx                          1/1     Running   0          23m
+kube-system   coredns-64b5cc5cbc-lxnx6                   1/1     Running   0          22m
+kube-system   coredns-64b5cc5cbc-wxfqt                   1/1     Running   0          22m
+kube-system   dns-autoscaler-5594cbb9c4-z8l4j            1/1     Running   0          22m
+kube-system   kube-apiserver-master-1                    1/1     Running   1          25m
+kube-system   kube-controller-manager-master-1           1/1     Running   2          25m
+kube-system   kube-proxy-nqgf9                           1/1     Running   0          24m
+kube-system   kube-proxy-nxf5d                           1/1     Running   0          24m
+kube-system   kube-proxy-v95j2                           1/1     Running   0          24m
+kube-system   kube-scheduler-master-1                    1/1     Running   1          25m
+kube-system   nginx-proxy-worker-1                       1/1     Running   0          24m
+kube-system   nginx-proxy-worker-2                       1/1     Running   0          24m
+kube-system   nodelocaldns-f6sm2                         1/1     Running   0          22m
+kube-system   nodelocaldns-rnjvf                         1/1     Running   0          22m
+kube-system   nodelocaldns-zvt9f                         1/1     Running   0          22m
+```
+
 Ожидаемый результат:
 
 1. Работоспособный Kubernetes кластер.

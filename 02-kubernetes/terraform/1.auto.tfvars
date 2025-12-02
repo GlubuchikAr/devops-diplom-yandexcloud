@@ -11,7 +11,7 @@ vpc_subnet = {
     }
 }
 
-instance_group = {
+instance_resources = {
         master = {
             name            = "master",
             count           = 1,
@@ -19,7 +19,7 @@ instance_group = {
             cores           = 2, 
             memory          = 4, 
             core_fraction   = 5,
-            disk_image      = "ubuntu-2004-lts",
+            disk_image      = "ubuntu-2204-lts",
             disk_type       = "network-hdd",
             disk_size       = 10,
             nat             = true
@@ -30,8 +30,8 @@ instance_group = {
             platform_id     = "standard-v1",
             cores           = 4, 
             memory          = 8, 
-            core_fraction   = 10,
-            disk_image      = "ubuntu-2004-lts",
+            core_fraction   = 20,
+            disk_image      = "ubuntu-2204-lts",
             disk_type       = "network-hdd",
             disk_size       = 10,
             nat             = true

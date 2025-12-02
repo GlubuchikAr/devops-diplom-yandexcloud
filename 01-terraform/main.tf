@@ -32,10 +32,10 @@ resource "yandex_storage_bucket" "tf-bucket" {
   force_destroy = true
 
 provisioner "local-exec" {
-  command = "echo 'access_key = \"${yandex_iam_service_account_static_access_key.service-keys.access_key}\"' > ../02/backend.conf"
+  command = "echo 'access_key = \"${yandex_iam_service_account_static_access_key.service-keys.access_key}\"' > ../02-kubernetes/backend.conf"
 }
 
 provisioner "local-exec" {
-  command = "echo 'secret_key = \"${yandex_iam_service_account_static_access_key.service-keys.secret_key}\"' >> ../02/backend.conf"
+  command = "echo 'secret_key = \"${yandex_iam_service_account_static_access_key.service-keys.secret_key}\"' >> ../02-kubernetes/backend.conf"
 }
 }

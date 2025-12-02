@@ -1,0 +1,18 @@
+[masters]
+%{ for idx, master in masters ~}
+${master.name} ansible_host=${master.network_interface[0].nat_ip_address} ansible_user=ubuntu
+%{ endfor ~}
+
+[workers]
+%{ for idx, worker in workers ~}
+${worker.name} ansible_host=${worker.network_interface[0].nat_ip_address} ansible_user=ubuntu
+%{ endfor ~}
+
+[k8s_cluster:children]
+masters
+workers
+
+[all:vars]
+ansible_connection=ssh
+ansible_user=ubuntu
+ansible_become=yes

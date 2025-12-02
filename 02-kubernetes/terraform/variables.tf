@@ -4,20 +4,6 @@ variable "bucket_name" {
   description = "bucket name"
 }
 
-variable "s3_access_key" {
-  description = "Yandex Cloud Storage access key"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "s3_secret_key" {
-  description = "Yandex Cloud Storage secret key"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
 variable "cloud_id" {
   type        = string
   description = "https://cloud.yandex.ru/docs/resource-manager/operations/cloud/get-id"
@@ -68,10 +54,10 @@ variable "image" {
 }
 
 
-variable "instance_group" {
+variable "instance_resources" {
   type        = map(object({
     name          = string,
-    fixed_scale   = number,
+    count         = number,
     platform_id   = string,
     cores         = number,
     memory        = number,
@@ -82,17 +68,35 @@ variable "instance_group" {
     nat           = bool
   }))
   default     = {
-    default = {
-      name          = "default",
-      count         = 1,
-      platform_id   = "standard-v1",
-      cores         = 2, 
-      memory        = 1, 
-      core_fraction = 5,
-      disk_image    = "fd80mrhj8fl2oe87o4e1",
-      disk_type     = "network-hdd",
-      disk_size     = 10,
-      nat           = true
-      }}
+    master = {
+        name            = "master",
+        count           = 1,
+        platform_id     = "standard-v1",
+        cores           = 2, 
+        memory          = 4, 
+        core_fraction   = 5,
+        disk_image      = "ubuntu-2004-lts",
+        disk_type       = "network-hdd",
+        disk_size       = 10,
+        nat             = true
+    }
+    worker = {
+        name            = "worker",
+        count           = 2,
+        platform_id     = "standard-v1",
+        cores           = 4, 
+        memory          = 8, 
+        core_fraction   = 5,
+        disk_image      = "ubuntu-2004-lts",
+        disk_type       = "network-hdd",
+        disk_size       = 10,
+        nat             = true
+    }}
   description = "instance_group"
+}
+
+variable "exclude_ansible" {
+  description = "Флаг для исключения ansible.tf"
+  type        = bool
+  default     = false
 }
