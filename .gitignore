@@ -133,3 +133,7 @@ tmp.md
 # Ansible collection files
 kubernetes_sigs-kubespray*tar.gz
 ansible_collections
+
+
+03-monitoring/helm-prometheus/values.yaml
+02-kubernetes/kubespray/inventory/mycluster/artifacts

@@ -440,6 +440,74 @@ docker push aglubuchik/diplom-application:0.1
 Цель:
 1. Задеплоить в кластер [prometheus](https://prometheus.io/), [grafana](https://grafana.com/), [alertmanager](https://github.com/prometheus/alertmanager), [экспортер](https://github.com/prometheus/node_exporter) основных метрик Kubernetes.
 2. Задеплоить тестовое приложение, например, [nginx](https://www.nginx.com/) сервер отдающий статическую страницу.
+```
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ mkdir helm-prometheus
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ helm show values prometheus-community/kube-prometheus-stack > helm-prometheus/values.yaml
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ helm upgrade --install monitoring prometheus-community/kube-prometheus-stack --create-namespace -n monitoring -f helm-prometheus/values.yaml
+Release "monitoring" does not exist. Installing it now.
+NAME: monitoring
+LAST DEPLOYED: Tue Dec  2 21:26:15 2025
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 1
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=monitoring"
+
+Get Grafana 'admin' user password by running:
+
+  kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+Access Grafana local instance:
+
+  export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
+  kubectl --namespace monitoring port-forward $POD_NAME 3000
+
+Get your grafana admin user password by running:
+
+  kubectl get secret --namespace monitoring -l app.kubernetes.io/component=admin-secret -o jsonpath="{.items[0].data.admin-password}" | base64 --decode ; echo
+
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ kubectl --namespace monitoring get pods -l "release=monitoring"
+NAME                                                   READY   STATUS    RESTARTS   AGE
+monitoring-kube-prometheus-operator-6f9b658949-l6kjr   1/1     Running   0          20m
+monitoring-kube-state-metrics-5bd8b6b9cd-99txq         1/1     Running   0          20m
+monitoring-prometheus-node-exporter-82bt6              1/1     Running   0          20m
+monitoring-prometheus-node-exporter-9d2tf              1/1     Running   0          20m
+monitoring-prometheus-node-exporter-wtw7s              1/1     Running   0          20m
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+4-o7blNI
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ kubectl --namespace monitoring port-forward $POD_NAME 3000
+error: TYPE/NAME and list of ports are required for port-forward
+See 'kubectl port-forward -h' for help and examples
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ kubectl --namespace monitoring port-forward $POD_NAME 3000
+Forwarding from 127.0.0.1:3000 -> 3000
+Forwarding from [::1]:3000 -> 3000
+^Cglubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ kubectl -n monitoring get svc -o wide
+NAME                                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE   SELECTOR
+alertmanager-operated                     ClusterIP   None            <none>        9093/TCP,9094/TCP,9094/UDP   24m   app.kubernetes.io/name=alertmanager
+monitoring-grafana                        ClusterIP   10.233.63.94    <none>        80/TCP                       24m   app.kubernetes.io/instance=monitoring,app.kubernetes.io/name=grafana
+monitoring-kube-prometheus-alertmanager   ClusterIP   10.233.40.102   <none>        9093/TCP,8080/TCP            24m   alertmanager=monitoring-kube-prometheus-alertmanager,app.kubernetes.io/name=alertmanager
+monitoring-kube-prometheus-operator       ClusterIP   10.233.25.130   <none>        443/TCP                      24m   app=kube-prometheus-stack-operator,release=monitoring
+monitoring-kube-prometheus-prometheus     ClusterIP   10.233.13.206   <none>        9090/TCP,8080/TCP            24m   app.kubernetes.io/name=prometheus,operator.prometheus.io/name=monitoring-kube-prometheus-prometheus
+monitoring-kube-state-metrics             ClusterIP   10.233.30.82    <none>        8080/TCP                     24m   app.kubernetes.io/instance=monitoring,app.kubernetes.io/name=kube-state-metrics
+monitoring-prometheus-node-exporter       ClusterIP   10.233.31.126   <none>        9100/TCP                     24m   app.kubernetes.io/instance=monitoring,app.kubernetes.io/name=prometheus-node-exporter
+prometheus-operated                       ClusterIP   None            <none>        9090/TCP                     24m   app.kubernetes.io/name=prometheus
+glubuchik@glubuchik-X15-AT-22:~/обучение/Netology/devops-diplom-yandexcloud/03-monitoring$ kubectl --namespace monitoring port-forward $POD_NAME 3000:3000
+Forwarding from 127.0.0.1:3000 -> 3000
+Forwarding from [::1]:3000 -> 3000
+Handling connection for 3000
+Handling connection for 3000
+Handling connection for 3000
+Handling connection for 3000
+Handling connection for 3000
+Handling connection for 3000
+Handling connection for 3000
+```
+переходим в 
+http://127.0.0.1:3000
 
 Способ выполнения:
 1. Воспользоваться пакетом [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus), который уже включает в себя [Kubernetes оператор](https://operatorhub.io/) для [grafana](https://grafana.com/), [prometheus](https://prometheus.io/), [alertmanager](https://github.com/prometheus/alertmanager) и [node_exporter](https://github.com/prometheus/node_exporter). Альтернативный вариант - использовать набор helm чартов от [bitnami](https://github.com/bitnami/charts/tree/main/bitnami).
